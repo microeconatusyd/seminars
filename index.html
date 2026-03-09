@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Microeconomic Theory Workshop</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+
+/* PAGE BACKGROUND */
+
+body{
+font-family:"Source Serif 4",serif;
+font-size:20px;
+line-height:1.7;
+background:#e6e6e6;
+margin:0;
+}
+
+/* PAPER EFFECT */
+
+.paper{
+max-width:900px;
+margin:50px auto;
+padding:50px 70px;
+background:white;
+box-shadow:0 6px 18px rgba(0,0,0,0.15);
+color:#222;
+}
+
+/* HEADINGS */
+
+h1{font-size:2.2em;margin-bottom:0.2em;}
+h2{margin-top:1.6em}
+.subtitle{color:#555;margin-bottom:1em;}
+.note{margin-bottom:2em;}
+
+/* SEMINAR LIST */
+
+.item{border-bottom:1px solid #ddd;}
+.header{display:flex;align-items:center;cursor:pointer;padding:16px 0;}
+.header:hover{background:#f3f3f3;}
+.date{width:130px;font-weight:600;}
+.speaker{flex-grow:1;}
+.arrow{margin-left:10px;transition:transform .2s;}
+
+.content{
+display:none;
+padding:10px 0 20px 130px;
+font-size:0.95em;
+}
+
+.item.active .content{display:block;}
+.item.active .arrow{transform:rotate(90deg);}
+
+/* LINKS */
+
+.links{margin-top:12px;font-size:0.9em;}
+.links a{color:#1a5fb4;text-decoration:none;margin-right:12px;}
+.links a:hover{text-decoration:underline;}
+
+/* UPCOMING TALK HIGHLIGHT */
+
+.item.upcoming{
+border-left:4px solid #2c6db2;
+padding-left:8px;
+background:#f6f9ff;
+}
+
+/* MOBILE */
+
+@media (max-width:700px){
+
+.paper{
+margin:0;
+padding:30px 22px;
+box-shadow:none;
+}
+
+body{font-size:18px}
+
+.header{flex-direction:column;align-items:flex-start}
+.date{width:auto}
+.content{padding-left:0}
+
+}
+
+/* TYPESSETTING IMPROVEMENTS */
+
+body { text-rendering: optimizeLegibility; }
+body { hyphens: auto; }
+body { letter-spacing: 0.01em; }
+
+p { margin: 0.6em 0 0.9em 0; }
+
+h1,h2,h3 { line-height:1.25; }
+
+/* semester accordion */
+
+
+.semester-header{
+cursor:pointer;
+margin-top:2em;
+padding:10px 0;
+font-weight:600;
+font-size:1.45em;   /* larger header */
+border-bottom:1px solid #bbb;
+}
+
+
+
+.semester-header:hover{
+color:#2c6db2;
+}
+
+.semester-content{
+display:none;
+margin-top:10px;
+}
+
+.semester.active .semester-content{
+display:block;
+}
+
+/* vertical rule grouping talks */
+
+.semester-content{
+display:none;
+margin-top:10px;
+padding-left:18px;
+border-left:2px solid #d6d6d6;
+}
+
+/* slightly separate talks */
+
+/* timeline talk items */
+
+.item{
+border-bottom:1px solid #ddd;
+margin-left:10px;
+position:relative;
+padding-left:14px;
+}
+
+/* dot marker on vertical rule */
+
+.item::before{
+
+content:"";
+
+position:absolute;
+
+left:-21px;
+
+top:50%;
+transform:translateY(-50%);
+
+width:8px;
+height:8px;
+
+border-radius:50%;
+
+background:#2c6db2;
+
+}
+
+.item.active::before{
+display:none;
+}
+
+.header{
+padding:12px 0;
+}
+
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+</head>
+
+<body>
+
+<div class="paper">
+
+<h1>Microeconomic Theory Workshop</h1>
+
+<h2>@ School of Economics, University of Sydney</h2>
+
+<hr>
+
+<ul>
+<li>
+Typically, these weekly seminars are held from  4 PM - 5:30 PM, Tuesdays in the
+<a href="https://maps.app.goo.gl/xTk7kf1mo38Zs6L69">Social Sciences Building</a>
+(3rd or 6th floor).
+</li>
+
+<li>
+Click on the listed speaker for all currently available details.
+<br>
+<span style="color:Grey97;"> 
+<a href="mailto:{murali.agastya,jingni.yang}@sydney.edu.au">
+Click here to get in touch.</a> </span>
+</li>
+</ul>
+<div id="seminars"></div>
+
+<script>
+
+/* -------------------------
+   DATE UTILITIES
+------------------------- */
+
+function parseDate(d){
+
+const parts = d.split("/")
+
+const day = parseInt(parts[0])
+const month = parseInt(parts[1]) - 1
+const year = parseInt(parts[2])
+
+return new Date(year,month,day)
+
+}
+
+function formatDate(d){
+
+const date = parseDate(d)
+
+return date.toLocaleDateString(
+'en-GB',
+{day:'numeric',month:'long'}
+)
+
+}
+
+/* -------------------------
+   CALENDAR LINKS
+------------------------- */
+
+function googleLink(title,speaker,date,location){
+
+let start=parseDate(date)
+start.setHours(16,0,0)
+
+let end=new Date(start)
+end.setHours(17)
+
+function fmt(x){
+return x.toISOString().replace(/[-:]/g,"").slice(0,15)
+}
+
+const params=new URLSearchParams({
+action:"TEMPLATE",
+text:title?title:"Seminar: "+speaker,
+dates:fmt(start)+"/"+fmt(end),
+location:location||""
+})
+
+return "https://calendar.google.com/calendar/render?"+params
+
+}
+
+function downloadICS(title,speaker,date,location){
+
+let start=parseDate(date)
+start.setHours(16,0,0)
+
+let end=new Date(start)
+end.setHours(17)
+
+function fmt(d){
+return d.toISOString().replace(/[-:]/g,"").slice(0,15)
+}
+
+let summary=title?title:"Seminar: "+speaker
+
+let ics=`BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+DTSTAMP:${fmt(new Date())}
+DTSTART:${fmt(start)}
+DTEND:${fmt(end)}
+SUMMARY:${summary}
+LOCATION:${location||""}
+DESCRIPTION:Microeconomic Theory Workshop
+END:VEVENT
+END:VCALENDAR`
+
+let blob=new Blob([ics],{type:"text/calendar"})
+let url=URL.createObjectURL(blob)
+
+let a=document.createElement("a")
+a.href=url
+a.download="seminar.ics"
+a.click()
+
+URL.revokeObjectURL(url)
+
+}
+
+/* -------------------------
+   LOAD CSV
+------------------------- */
+
+fetch("seminars.csv")
+.then(r=>r.text())
+.then(text=>{
+
+const rows=text.trim().split("\n")
+const headers=rows.shift().split(",")
+
+const seminars=rows.map(r=>{
+
+const values=r.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/)
+
+let obj={}
+headers.forEach((h,i)=>obj[h]=values[i]?.replace(/^"|"$|\r/g,"")||"")
+
+return obj
+
+})
+
+/* chronological order */
+
+seminars.sort((a,b)=>parseDate(a.date)-parseDate(b.date))
+
+const container=document.getElementById("seminars")
+
+/* -------------------------
+   GROUP BY SEMESTER
+------------------------- */
+
+const groups={}
+
+seminars.forEach(s=>{
+
+if(!s.date) return
+
+const date=parseDate(s.date)
+
+const year=date.getFullYear()
+const month=date.getMonth()+1
+
+const semester=(month<=6)?"S1":"S2"
+
+const key=semester+", "+year
+
+if(!groups[key]){
+
+groups[key]={
+year:year,
+semester:(semester==="S1")?1:2,
+talks:[]
+}
+
+}
+
+groups[key].talks.push(s)
+
+})
+
+/* -------------------------
+   SORT SEMESTERS
+------------------------- */
+
+const orderedGroups=Object.values(groups).sort((a,b)=>{
+
+if(a.year!==b.year) return b.year-a.year
+
+return b.semester-a.semester
+
+})
+
+/* -------------------------
+   RENDER SEMESTERS
+------------------------- */
+
+orderedGroups.forEach((group,index)=>{
+
+const label=(group.semester===1?"S1":"S2")+", "+group.year
+
+const semesterDiv=document.createElement("div")
+semesterDiv.className="semester"
+
+const header=document.createElement("div")
+header.className="semester-header"
+header.textContent=label
+
+semesterDiv.appendChild(header)
+
+const content=document.createElement("div")
+content.className="semester-content"
+
+semesterDiv.appendChild(content)
+
+container.appendChild(semesterDiv)
+
+/* render talks */
+
+group.talks.forEach(s=>{
+
+let item=document.createElement("div")
+item.className="item"
+item.dataset.date=s.date
+
+let speaker=s.speaker
+? s.speaker+(s.affiliation?` (${s.affiliation})`:"")
+: "TBA"
+
+item.innerHTML=`
+
+<div class="header">
+<div class="date">${formatDate(s.date)}</div>
+<div class="speaker">${speaker}</div>
+<div class="arrow">▶</div>
+</div>
+
+<div class="content">
+
+${s.title?`<b>${s.title}</b><br><br>`:""}
+
+${s.abstract||"Abstract to be announced."}
+
+<div class="links">
+<a href="${googleLink(s.title,s.speaker,s.date,s.location)}" target="_blank">Add to Google Calendar</a>
+<a href="#" class="ics">Add to Outlook / Apple</a>
+</div>
+
+</div>
+`
+
+content.appendChild(item)
+
+item.querySelector(".ics").onclick=(e)=>{
+e.preventDefault()
+downloadICS(s.title,s.speaker,s.date,s.location)
+}
+
+})
+
+/* open newest semester */
+
+if(index===0){
+semesterDiv.classList.add("active")
+}
+
+/* semester accordion */
+
+header.onclick=()=>{
+
+document.querySelectorAll(".semester").forEach(s=>{
+s.classList.remove("active")
+})
+
+semesterDiv.classList.add("active")
+
+}
+
+})
+
+/* -------------------------
+   TALK ACCORDION
+------------------------- */
+
+const items=document.querySelectorAll(".item")
+
+items.forEach(item=>{
+
+item.querySelector(".header").onclick=()=>{
+
+items.forEach(i=>i.classList.remove("active"))
+
+item.classList.add("active")
+
+}
+
+})
+
+/* -------------------------
+   OPEN NEXT TALK
+------------------------- */
+
+const today=new Date()
+today.setHours(0,0,0,0)
+
+let next=null
+
+items.forEach(item=>{
+
+const d=parseDate(item.dataset.date)
+
+if(d>=today && !next) next=item
+
+})
+
+if(next){
+
+next.classList.add("active")
+next.classList.add("upcoming")
+
+}
+
+})
+
+</script>
+
+</div>
+
+</body>
+</html>
