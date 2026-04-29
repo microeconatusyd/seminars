@@ -422,9 +422,9 @@ downloadICS(s.title,s.speaker,s.date,s.location)
 
 /* open newest semester */
 
-if(index===0){
+/* if(index===0){
 semesterDiv.classList.add("active")
-}
+} */
 
 /* semester accordion */
 
@@ -475,12 +475,25 @@ if(d>=today && !next) next=item
 
 })
 
-if(next){
+/* if(next){
 
 next.classList.add("active")
 next.classList.add("upcoming")
 
+} */
+if(next){
+  next.classList.add("active")
+  next.classList.add("upcoming")
+  // Open whichever semester contains this talk
+  const parentSemester = next.closest(".semester")
+  if(parentSemester) parentSemester.classList.add("active")
+} else {
+  // No upcoming talks — fall back to the first (most recent) semester
+  const firstSemester = document.querySelector(".semester")
+  if(firstSemester) firstSemester.classList.add("active")
 }
+
+  
 
 })
 
