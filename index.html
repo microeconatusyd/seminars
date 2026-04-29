@@ -345,13 +345,20 @@ groups[key].talks.push(s)
    SORT SEMESTERS
 ------------------------- */
 
+
+const now=new Date()
+const currentYear=now.getFullYear()
+const currentSem=(now.getMonth()+1)<=6 ? 1 : 2
+
 const orderedGroups=Object.values(groups).sort((a,b)=>{
-
-if(a.year!==b.year) return b.year-a.year
-
-return b.semester-a.semester
-
+  const aCurrent=a.year===currentYear && a.semester===currentSem
+  const bCurrent=b.year===currentYear && b.semester===currentSem
+  if(aCurrent && !bCurrent) return -1
+  if(!aCurrent && bCurrent) return 1
+  if(a.year!==b.year) return b.year-a.year
+  return b.semester-a.semester
 })
+
 
 /* -------------------------
    RENDER SEMESTERS
@@ -466,32 +473,29 @@ const today=new Date()
 today.setHours(0,0,0,0)
 
 let next=null
+let nextDate=null
 
 items.forEach(item=>{
-
-const d=parseDate(item.dataset.date)
-
-if(d>=today && !next) next=item
-
+  const d=parseDate(item.dataset.date)
+  if(d>=today && (!nextDate || d<nextDate)){
+    next=item
+    nextDate=d
+  }
 })
 
-/* if(next){
-
-next.classList.add("active")
-next.classList.add("upcoming")
-
-} */
 if(next){
   next.classList.add("active")
   next.classList.add("upcoming")
-  // Open whichever semester contains this talk
-  const parentSemester = next.closest(".semester")
+  const parentSemester=next.closest(".semester")
   if(parentSemester) parentSemester.classList.add("active")
+  next.scrollIntoView({behavior:"smooth", block:"center"})
 } else {
-  // No upcoming talks — fall back to the first (most recent) semester
-  const firstSemester = document.querySelector(".semester")
+  const firstSemester=document.querySelector(".semester")
   if(firstSemester) firstSemester.classList.add("active")
 }
+
+
+
 
   
 
